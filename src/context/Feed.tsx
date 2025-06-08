@@ -1,38 +1,30 @@
-import React, { PropsWithChildren, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import {
   Activity,
-  GetFeedOptions,
-  ReactionAPIResponse,
-  StreamClient,
-  ReactionAddOptions,
-  UR,
-  Reaction,
   FeedAPIResponse,
+  GetFeedOptions,
+  Reaction,
+  ReactionAPIResponse,
   ReactionAddChildOptions,
+  ReactionAddOptions,
   ReactionFilterAPIResponse,
   ReactionFilterConditions,
+  StreamClient,
+  UR,
 } from 'getstream';
-
-import { FeedManager } from './FeedManager';
-import { DefaultAT, DefaultUT, useStreamContext } from './StreamApp';
 import isEqual from 'lodash/isEqual';
+import React, { PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { FeedManager } from './FeedManager';
+import { TransportType, useStreamContext } from './StreamApp';
 
-export type FeedContextValue<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> = {
+export type FeedContextValue<T extends TransportType> = {
   feedGroup: string;
-  feedManager: FeedManager<UT, AT, CT, RT, CRT, PT>;
+  feedManager: FeedManager<T>;
   hasDoneRequest: boolean;
   hasNextPage: boolean;
   hasReverseNextPage: boolean;
   userId?: string;
 } & Pick<
-  FeedManager<UT, AT, CT, RT, CRT, PT>,
+  FeedManager<T>,
   | 'loadNextPage'
   | 'loadNextReactions'
   | 'loadReverseNextPage'
@@ -50,20 +42,13 @@ export type FeedContextValue<
   | 'refreshUnreadUnseen'
 > &
   Pick<
-    FeedManager<UT, AT, CT, RT, CRT, PT>['state'],
+    FeedManager<T>['state'],
     'activities' | 'activityOrder' | 'realtimeAdds' | 'realtimeDeletes' | 'refreshing' | 'unread' | 'unseen'
   >;
 
 type DeleteRequestFn = (id: string) => Promise<void | unknown>;
 
-export type FeedProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> = {
+export type FeedProps<T extends TransportType> = {
   /** The feed group part of the feed */
   feedGroup: string;
   /** The location that should be used for analytics when liking in the feed,
@@ -76,30 +61,30 @@ export type FeedProps<
   /** Override child reaction add request */
   doChildReactionAddRequest?: (
     kind: string,
-    reaction: Reaction<RT>,
-    data?: CRT,
+    reaction: Reaction<T['reactionType']>,
+    data?: T['childReactionType'],
     options?: ReactionAddChildOptions,
-  ) => Promise<ReactionAPIResponse<CRT>>;
+  ) => Promise<ReactionAPIResponse<T['childReactionType']>>;
   /** Override child reaction delete request */
   doChildReactionDeleteRequest?: DeleteRequestFn;
   /** The feed read handler (change only for advanced/complex use-cases) */
   doFeedRequest?: (
-    client: StreamClient<UT, AT, CT, RT, CRT, PT>,
+    client: StreamClient<T>,
     feedGroup: string,
     userId?: string,
     options?: GetFeedOptions,
-  ) => Promise<FeedAPIResponse<UT, AT, CT, RT, CRT>>;
+  ) => Promise<FeedAPIResponse<T>>;
   /** Override reaction add request */
   doReactionAddRequest?: (
     kind: string,
-    activity: Activity<AT>,
-    data?: RT,
+    activity: Activity<T>,
+    data?: T['reactionType'],
     options?: ReactionAddOptions,
-  ) => Promise<ReactionAPIResponse<RT>>;
+  ) => Promise<ReactionAPIResponse<T['reactionType']>>;
   /** Override reaction delete request */
   doReactionDeleteRequest?: DeleteRequestFn;
   /** Override reactions filter request */
-  doReactionsFilterRequest?: (options: ReactionFilterConditions) => Promise<ReactionFilterAPIResponse<RT, CRT, AT, UT>>;
+  doReactionsFilterRequest?: (options: ReactionFilterConditions) => Promise<ReactionFilterAPIResponse<T>>;
   /** If true, feed shows the Notifier component when new activities are added */
   notify?: boolean;
   /** Read options for the API client (eg. limit, ranking, ...) */
@@ -108,47 +93,19 @@ export type FeedProps<
   userId?: string;
 };
 
-export const FeedContext = React.createContext<FeedContextValue | UR>({});
+export const FeedContext = React.createContext<FeedContextValue<TransportType> | UR>({});
 
-export const FeedProvider = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export const FeedProvider = <T extends TransportType>({
   children,
   value,
 }: PropsWithChildren<{
-  value: FeedContextValue<UT, AT, CT, RT, CRT, PT>;
+  value: FeedContextValue<T>;
 }>) => <FeedContext.Provider value={value}>{children}</FeedContext.Provider>;
 
-export const useFeedContext = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->() => useContext(FeedContext) as FeedContextValue<UT, AT, CT, RT, CRT, PT>;
+export const useFeedContext = <T extends TransportType>() => useContext(FeedContext) as FeedContextValue<T>;
 
-export function Feed<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->(props: FeedProps<UT, AT, CT, RT, CRT, PT>) {
-  const { analyticsClient, client, user, errorHandler, sharedFeedManagers } = useStreamContext<
-    UT,
-    AT,
-    CT,
-    RT,
-    CRT,
-    PT
-  >();
+export function Feed<T extends TransportType>(props: FeedProps<T>) {
+  const { analyticsClient, client, user, errorHandler, sharedFeedManagers } = useStreamContext<T>();
   const { feedGroup, userId, children, options, notify } = props;
   const [, setForceUpdateState] = useState(0);
 
@@ -162,10 +119,7 @@ export function Feed<
     if (!feedId) return null;
 
     // TODO: check if any of the clients changed
-    return (
-      sharedFeedManagers[feedId] ||
-      new FeedManager<UT, AT, CT, RT, CRT, PT>({ ...props, analyticsClient, client, user, errorHandler })
-    );
+    return sharedFeedManagers[feedId] || new FeedManager<T>({ ...props, analyticsClient, client, user, errorHandler });
   }, [feedId]);
 
   useEffect(() => {

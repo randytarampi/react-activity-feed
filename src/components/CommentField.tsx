@@ -1,21 +1,17 @@
-import React, { useRef, useState, FormEvent, useEffect } from 'react';
 import classNames from 'classnames';
-import { EnrichedActivity, Activity } from 'getstream';
 import { Data as EmojiDataSet } from 'emoji-mart';
-
+import { Activity, EnrichedActivity } from 'getstream';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
+import { useFeedContext, useTranslationContext } from '../context';
+import { TransportType } from '../context/StreamApp';
+import { PropsWithElementAttributes, inputValueFromEvent } from '../utils';
 import { Avatar } from './Avatar';
 import { Button } from './Button';
 import { Textarea, TextareaProps } from './Textarea';
-import { inputValueFromEvent, PropsWithElementAttributes } from '../utils';
-import { useFeedContext, useTranslationContext } from '../context';
-import { DefaultAT, DefaultUT } from '../context/StreamApp';
 
-export type CommentFieldProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT
-> = PropsWithElementAttributes<
+export type CommentFieldProps<T extends TransportType> = PropsWithElementAttributes<
   {
-    activity: EnrichedActivity<UT, AT>;
+    activity: EnrichedActivity<T>;
     /** Override the default emoji dataset, library has a light set of emojis
      * to show more emojis use your own or emoji-mart sets
      * https://github.com/missive/emoji-mart#datasets
@@ -30,7 +26,7 @@ export type CommentFieldProps<
   HTMLFormElement
 >;
 
-export const CommentField = <UT extends DefaultUT = DefaultUT, AT extends DefaultAT = DefaultAT>({
+export const CommentField = <T extends TransportType>({
   activity,
   emojiData,
   onSuccess,
@@ -40,8 +36,8 @@ export const CommentField = <UT extends DefaultUT = DefaultUT, AT extends Defaul
   targetFeeds,
   className,
   style,
-}: CommentFieldProps<UT, AT>) => {
-  const feed = useFeedContext<UT, AT>();
+}: CommentFieldProps<T>) => {
+  const feed = useFeedContext<T>();
   const { t } = useTranslationContext();
   const textareaReference = useRef<HTMLTextAreaElement>();
   const [text, setText] = useState<string>();
@@ -52,7 +48,7 @@ export const CommentField = <UT extends DefaultUT = DefaultUT, AT extends Defaul
     if (!text) return;
 
     try {
-      await feed.onAddReaction('comment', activity as Activity<AT>, { text }, { targetFeeds });
+      await feed.onAddReaction('comment', activity as Activity<T>, { text }, { targetFeeds });
     } catch (error) {
       console.error(error);
     }

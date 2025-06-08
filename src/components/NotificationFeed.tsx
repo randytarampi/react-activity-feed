@@ -1,25 +1,18 @@
+import { NotificationActivityEnriched } from 'getstream';
 import React, { useEffect } from 'react';
-import { NotificationActivityEnriched, UR } from 'getstream';
-
-import { Feed, FeedManagerProps, FeedProps, DefaultUT, DefaultAT, useFeedContext } from '../context';
-import { NewActivitiesNotification, NewActivitiesNotificationProps } from './NewActivitiesNotification';
-import { LoadMorePaginator, LoadMorePaginatorProps } from './LoadMorePaginator';
-import { Notification, NotificationProps } from './Notification';
 import { LoadingIndicator as DefaultLoadingIndicator, LoadingIndicatorProps } from 'react-file-utils';
+import { Feed, FeedManagerProps, FeedProps, TransportType, useFeedContext } from '../context';
+import { ElementOrComponentOrLiteralType, smartRender } from '../utils';
 import { FeedPlaceholder, FeedPlaceholderProps } from './FeedPlaceholder';
-import { smartRender, ElementOrComponentOrLiteralType } from '../utils';
+import { LoadMorePaginator, LoadMorePaginatorProps } from './LoadMorePaginator';
+import { NewActivitiesNotification, NewActivitiesNotificationProps } from './NewActivitiesNotification';
+import { Notification, NotificationProps } from './Notification';
 
-type NotificationFeedInnerProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = {
+type NotificationFeedInnerProps<T extends TransportType> = {
   /** the component used to render a grouped notifications in the feed
    * #Notification (Component)#
    */
-  Group: ElementOrComponentOrLiteralType<NotificationProps<UT, AT, CT, RT, CRT>>;
+  Group: ElementOrComponentOrLiteralType<NotificationProps<T>>;
   /** Component to show when the feed is refreshing
    * #LoadingIndicator (Component)#
    */
@@ -38,20 +31,13 @@ type NotificationFeedInnerProps<
    */
   Placeholder: ElementOrComponentOrLiteralType<FeedPlaceholderProps>;
   /** Read options for the API client (eg. limit, ranking, ...) */
-  options?: FeedProps['options'];
+  options?: FeedProps<T>['options'];
 };
 
-export type NotificationFeedProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> = Partial<
-  NotificationFeedInnerProps<UT, AT, CT, RT, CRT> &
+export type NotificationFeedProps<T extends TransportType> = Partial<
+  NotificationFeedInnerProps<T> &
     Pick<
-      FeedManagerProps<UT, AT, CT, RT, CRT, PT>,
+      FeedManagerProps<T>,
       | 'analyticsLocation'
       | 'doActivityDeleteRequest'
       | 'doChildReactionAddRequest'
@@ -66,22 +52,15 @@ export type NotificationFeedProps<
     >
 >;
 
-const NotificationFeedInner = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+const NotificationFeedInner = <T extends TransportType>({
   Group,
   LoadingIndicator,
   Notifier,
   Paginator,
   Placeholder,
   options,
-}: NotificationFeedInnerProps<UT, AT, CT, RT, CRT>) => {
-  const feed = useFeedContext<UT, AT, CT, RT, CRT, PT>();
+}: NotificationFeedInnerProps<T>) => {
+  const feed = useFeedContext<T>();
 
   const refreshFeed = () => feed.refresh(options);
 
@@ -111,8 +90,8 @@ const NotificationFeedInner = <
             hasNextPage: feed.hasNextPage,
             refreshing: feed.refreshing,
             children: feed.activityOrder.map((id) =>
-              smartRender<NotificationProps<UT, AT, CT, RT, CRT>>(Group, {
-                activityGroup: feed.activities.get(id)?.toJS() as NotificationActivityEnriched<UT, AT, CT, RT, CRT>,
+              smartRender<NotificationProps<T>>(Group, {
+                activityGroup: feed.activities.get(id)?.toJS() as NotificationActivityEnriched<T>,
                 // @ts-expect-error
                 key: id,
               }),
@@ -125,14 +104,7 @@ const NotificationFeedInner = <
 /**
  * Renders a Notification feed, this component is a StreamApp consumer and must always be a child of `<StreamApp>`.
  */
-export const NotificationFeed = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export const NotificationFeed = <T extends TransportType>({
   options,
   userId,
   analyticsLocation,
@@ -150,9 +122,9 @@ export const NotificationFeed = <
   Paginator = LoadMorePaginator,
   Placeholder = FeedPlaceholder,
   LoadingIndicator = DefaultLoadingIndicator,
-}: NotificationFeedProps<UT, AT, CT, RT, CRT, PT>) => {
+}: NotificationFeedProps<T>) => {
   return (
-    <Feed<UT, AT, CT, RT, CRT, PT>
+    <Feed<T>
       feedGroup={feedGroup}
       userId={userId}
       options={{ ...options, mark_seen: options?.mark_seen ?? true }}
@@ -166,7 +138,7 @@ export const NotificationFeed = <
       doChildReactionDeleteRequest={doChildReactionDeleteRequest}
       doReactionsFilterRequest={doReactionsFilterRequest}
     >
-      <NotificationFeedInner<UT, AT, CT, RT, CRT, PT>
+      <NotificationFeedInner<T>
         Group={Group}
         LoadingIndicator={LoadingIndicator}
         Notifier={Notifier}

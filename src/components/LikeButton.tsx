@@ -1,42 +1,28 @@
+import { Activity, EnrichedActivity, EnrichedReaction, Reaction } from 'getstream';
 import React, { useEffect } from 'react';
-import { Activity, EnrichedReaction, UR, Reaction, EnrichedActivity } from 'getstream';
-
-import { DefaultAT, DefaultUT } from '../context/StreamApp';
-import { ReactionToggleIcon } from './ReactionToggleIcon';
-import { ThumbsUpIcon, Color } from './Icons';
 import { useFeedContext } from '../context';
+import { TransportType } from '../context/StreamApp';
 import { PropsWithElementAttributes } from '../utils';
+import { Color, ThumbsUpIcon } from './Icons';
+import { ReactionToggleIcon } from './ReactionToggleIcon';
 
-export type LikeButtonProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = PropsWithElementAttributes<{
+export type LikeButtonProps<T extends TransportType> = PropsWithElementAttributes<{
   /** The activity received from stream that should be liked when pressing the LikeButton. */
-  activity?: EnrichedActivity<UT, AT, CT, RT, CRT>;
+  activity?: EnrichedActivity<T>;
   /** The reaction received from stream that should be liked when pressing the LikeButton. */
-  reaction?: EnrichedReaction<RT, CRT, UT>;
+  reaction?: EnrichedReaction<T>;
   /** onAddReaction supports targetFeeds that you can use to send a notification to the post owner like ["notification:USER_ID"] */
   targetFeeds?: string[];
 }>;
 
-export const LikeButton = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export const LikeButton = <T extends TransportType>({
   activity,
   reaction,
   targetFeeds,
   className,
   style,
-}: LikeButtonProps<UT, AT, CT, RT, CRT>) => {
-  const feed = useFeedContext<UT, AT, CT, RT, CRT, PT>();
+}: LikeButtonProps<T>) => {
+  const feed = useFeedContext<T>();
 
   useEffect(() => {
     if (!reaction && !activity) console.warn('LikeButton requires an activity or reaction to work properly');
@@ -51,8 +37,17 @@ export const LikeButton = <
       own_reactions={reaction?.own_children ?? activity?.own_reactions}
       kind="like"
       onPress={() => {
-        if (reaction) return feed.onToggleChildReaction('like', reaction as Reaction<RT>, {} as CRT, { targetFeeds });
-        if (activity) return feed.onToggleReaction('like', activity as Activity<AT>, {} as RT, { targetFeeds });
+        if (reaction)
+          return feed.onToggleChildReaction(
+            'like',
+            reaction as Reaction<T['reactionType']>,
+            {} as T['childReactionType'],
+            { targetFeeds },
+          );
+        if (activity)
+          return feed.onToggleReaction('like', activity as Activity<T>, {} as T['reactionType'], {
+            targetFeeds,
+          });
         return Promise.resolve();
       }}
       activeIcon={<ThumbsUpIcon style={{ color: Color.Active }} />}

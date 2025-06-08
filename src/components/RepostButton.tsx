@@ -1,26 +1,19 @@
+import { Activity, EnrichedActivity } from 'getstream';
 import React from 'react';
-import { Activity, EnrichedActivity, UR } from 'getstream';
-
-import { ReactionToggleIcon } from './ReactionToggleIcon';
-import { useFeedContext, DefaultAT, DefaultUT, useStreamContext } from '../context';
-import { RepostIcon, Color } from './Icons';
+import { TransportType, useFeedContext, useStreamContext } from '../context';
 import { PropsWithElementAttributes } from '../utils';
+import { Color, RepostIcon } from './Icons';
+import { ReactionToggleIcon } from './ReactionToggleIcon';
 
-export type RepostButtonProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = PropsWithElementAttributes<{
+export type RepostButtonProps<T extends TransportType> = PropsWithElementAttributes<{
   /** The activity received for stream for which to show the repost button. This is
    * used to initialize the toggle state and the counter. */
-  activity: EnrichedActivity<UT, AT, CT, RT, CRT>;
+  activity: EnrichedActivity<T>;
   /** The feed group part of the feed that the activity should be reposted to,
    * e.g. `user` when posting to your own profile */
   feedGroup?: string;
   /** Repost reaction custom data  */
-  repostData?: RT;
+  repostData?: T['reactionType'];
   /** onAddReaction supports targetFeeds that you can use to send a notification to the post owner like ["notification:USER_ID"] */
   targetFeeds?: string[];
   /** The user_id part of the feed that the activity should be reposted to, default to current user id */
@@ -30,14 +23,7 @@ export type RepostButtonProps<
 /**
  * A repost button ready to be embedded as Activity footer
  */
-export const RepostButton = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export const RepostButton = <T extends TransportType>({
   activity,
   feedGroup = 'user',
   userId,
@@ -45,23 +31,23 @@ export const RepostButton = <
   targetFeeds = [],
   className,
   style,
-}: RepostButtonProps<UT, AT, CT, RT, CRT>) => {
-  const feed = useFeedContext<UT, AT, CT, RT, CRT, PT>();
-  const app = useStreamContext<UT, AT, CT, RT, CRT, PT>();
+}: RepostButtonProps<T>) => {
+  const feed = useFeedContext<T>();
+  const app = useStreamContext<T>();
 
   // this to prevent reposting another repost, you can only repost an original activity to avoid nesting
   const originalActivity =
     activity.verb === 'repost' && typeof activity.object === 'object'
-      ? (activity.object as EnrichedActivity<UT, AT, CT, RT, CRT>)
+      ? (activity.object as EnrichedActivity<T>)
       : activity;
 
   return (
-    <ReactionToggleIcon<UT, RT, CRT>
+    <ReactionToggleIcon<T>
       counts={originalActivity.reaction_counts}
       own_reactions={originalActivity.own_reactions}
       kind="repost"
       onPress={() =>
-        feed.onToggleReaction('repost', originalActivity as Activity<AT>, repostData, {
+        feed.onToggleReaction('repost', originalActivity as Activity<T>, repostData, {
           targetFeeds: [`${feedGroup}:${userId || app.user?.id}`, ...targetFeeds],
         })
       }

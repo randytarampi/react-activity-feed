@@ -1,36 +1,34 @@
-/* eslint-disable sonarjs/no-identical-functions */
-import immutable from 'immutable';
-import URL from 'url-parse';
-import StreamAnalytics from 'stream-analytics';
-import _isPlainObject from 'lodash/isPlainObject';
-import _isEqual from 'lodash/isEqual';
-import _remove from 'lodash/remove';
+import { Subscription } from 'faye';
 import {
-  UR,
-  StreamClient,
-  StreamUser,
-  FeedAPIResponse,
-  RealTimeMessage,
-  GetFeedOptions,
   Activity,
-  EnrichedActivity,
-  FlatActivityEnriched,
   AggregatedActivityEnriched,
-  NotificationActivityEnriched,
-  Reaction,
-  ReactionAddOptions,
-  ReactionAPIResponse,
-  ReactionAddChildOptions,
-  ReactionFilterAPIResponse,
+  EnrichedActivity,
   EnrichedReaction,
   EnrichedReactionAPIResponse,
+  FeedAPIResponse,
+  FlatActivityEnriched,
+  GetFeedOptions,
+  NotificationActivityEnriched,
+  Reaction,
+  ReactionAPIResponse,
+  ReactionAddChildOptions,
+  ReactionAddOptions,
+  ReactionFilterAPIResponse,
+  RealTimeMessage,
+  StreamClient,
+  StreamUser,
 } from 'getstream';
-
+/* eslint-disable sonarjs/no-identical-functions */
+import immutable from 'immutable';
+import _isEqual from 'lodash/isEqual';
+import _isPlainObject from 'lodash/isPlainObject';
+import _remove from 'lodash/remove';
+import StreamAnalytics from 'stream-analytics';
+import URL from 'url-parse';
 import { generateRandomId } from '../utils';
 import { ErrorHandler } from '../utils/errors';
-import { DefaultUT, DefaultAT } from './StreamApp';
 import { FeedProps } from './Feed';
-import { Subscription } from 'faye';
+import { TransportType } from './StreamApp';
 
 type CU = immutable.Collection<unknown, unknown>;
 
@@ -38,41 +36,22 @@ type MarkAsGroup = boolean | { id: string } | Array<{ id: string }>;
 
 type TrackAnalytics = { trackAnalytics?: boolean };
 
-type ResponseResult<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> =
-  | FlatActivityEnriched<UT, AT, CT, RT, CRT>
-  | AggregatedActivityEnriched<UT, AT, CT, RT, CRT>
-  | NotificationActivityEnriched<UT, AT, CT, RT, CRT>;
+type ResponseResult<T extends TransportType> =
+  | FlatActivityEnriched<T>
+  | AggregatedActivityEnriched<T>
+  | NotificationActivityEnriched<T>;
 
 export type UpdateTriggeredCallback = () => void;
 
-export type FeedManagerProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> = FeedProps<UT, AT, CT, RT, CRT, PT> & {
-  analyticsClient: StreamAnalytics<UT> | null;
-  client: StreamClient<UT, AT, CT, RT, CRT, PT>;
+export type FeedManagerProps<T extends TransportType> = FeedProps<T> & {
+  analyticsClient: StreamAnalytics<T['userType']> | null;
+  client: StreamClient<T>;
   errorHandler: ErrorHandler;
-  user?: StreamUser<UT>;
+  user?: StreamUser<T>;
 };
 
-export type FeedManagerState<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = {
-  activities: immutable.Map<string, immutable.Record<ResponseResult<UT, AT, CT, RT, CRT>>>;
+export type FeedManagerState<T extends TransportType> = {
+  activities: immutable.Map<string, immutable.Record<ResponseResult<T>>>;
   activityIdToPath: Record<string, Array<string | number>>;
   // Used for finding reposted activities
   activityIdToPaths: Record<string, Array<Array<string | number>>>;
@@ -85,29 +64,22 @@ export type FeedManagerState<
   // Used for finding reposted activities
   reactionIdToPaths: Record<string, Array<Array<string | number>>>;
   reactionsBeingToggled: Record<string, Record<string, boolean>>;
-  realtimeAdds: RealTimeMessage<UT, AT>['new'];
+  realtimeAdds: RealTimeMessage<T>['new'];
   realtimeDeletes: string[];
   refreshing: boolean;
   subscription: Promise<Subscription> | null;
   unread: number;
   unseen: number;
-  lastResponse?: FeedAPIResponse<UT, AT, CT, RT, CRT> | null;
+  lastResponse?: FeedAPIResponse<T> | null;
   lastReverseResponse?: { next: string } | null;
 };
 
-export class FeedManager<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> {
+export class FeedManager<T extends TransportType> {
   registeredCallbacks: Array<UpdateTriggeredCallback>;
 
-  props: FeedManagerProps<UT, AT, CT, RT, CRT, PT>;
+  props: FeedManagerProps<T>;
 
-  state: FeedManagerState<UT, AT, CT, RT, CRT> = {
+  state: FeedManagerState<T> = {
     activityOrder: [],
     activities: immutable.Map(),
     activityIdToPath: {},
@@ -127,7 +99,7 @@ export class FeedManager<
     childReactionsBeingToggled: {},
   };
 
-  constructor(props: FeedManagerProps<UT, AT, CT, RT, CRT, PT>) {
+  constructor(props: FeedManagerProps<T>) {
     this.props = props;
     const initialOptions = this.getOptions();
     this.registeredCallbacks = [];
@@ -163,9 +135,7 @@ export class FeedManager<
   }
 
   setState = (
-    changed:
-      | Partial<FeedManagerState<UT, AT, CT, RT, CRT>>
-      | ((oldState: FeedManagerState<UT, AT, CT, RT, CRT>) => Partial<FeedManagerState<UT, AT, CT, RT, CRT>>),
+    changed: Partial<FeedManagerState<T>> | ((oldState: FeedManagerState<T>) => Partial<FeedManagerState<T>>),
   ) => {
     this.state = {
       ...this.state,
@@ -216,15 +186,15 @@ export class FeedManager<
 
   onAddReaction = async (
     kind: string,
-    activity: Activity<AT>,
-    data?: RT,
+    activity: Activity<T>,
+    data?: T['reactionType'],
     options: ReactionAddOptions & TrackAnalytics = {},
   ) => {
     if (!options.userId && this.props?.client.userId) {
       options.userId = this.props.client.userId;
     }
 
-    let reaction: ReactionAPIResponse<RT>;
+    let reaction: ReactionAPIResponse<T['reactionType']>;
     try {
       if (this.props.doReactionAddRequest) {
         reaction = await this.props.doReactionAddRequest(kind, activity, data, options);
@@ -262,7 +232,7 @@ export class FeedManager<
     });
   };
 
-  onRemoveReaction = async (kind: string, activity: Activity<AT>, id: string, options: TrackAnalytics = {}) => {
+  onRemoveReaction = async (kind: string, activity: Activity<T>, id: string, options: TrackAnalytics = {}) => {
     try {
       if (this.props.doReactionDeleteRequest) {
         await this.props.doReactionDeleteRequest(id);
@@ -309,8 +279,8 @@ export class FeedManager<
 
   onToggleReaction = async (
     kind: string,
-    activity: Activity<AT>,
-    data?: RT,
+    activity: Activity<T>,
+    data?: T['reactionType'],
     options: ReactionAddOptions & TrackAnalytics = {},
   ) => {
     const togglingReactions = this.state.reactionsBeingToggled[kind] || {};
@@ -336,8 +306,8 @@ export class FeedManager<
 
   onAddChildReaction = async (
     kind: string,
-    reaction: Reaction<RT>,
-    data?: CRT,
+    reaction: Reaction<T['reactionType']>,
+    data?: T['childReactionType'],
     options: ReactionAddChildOptions = {},
   ) => {
     if (!options.userId && this.props.client && this.props.client.userId) {
@@ -377,7 +347,7 @@ export class FeedManager<
     });
   };
 
-  onRemoveChildReaction = async (kind: string, reaction: Reaction<RT>, id: string) => {
+  onRemoveChildReaction = async (kind: string, reaction: Reaction<T['reactionType']>, id: string) => {
     try {
       if (this.props.doChildReactionDeleteRequest) {
         await this.props.doChildReactionDeleteRequest(id);
@@ -417,8 +387,8 @@ export class FeedManager<
 
   onToggleChildReaction = async (
     kind: string,
-    reaction: Reaction<RT>,
-    data?: CRT,
+    reaction: Reaction<T['reactionType']>,
+    data?: T['childReactionType'],
     options: ReactionAddChildOptions = {},
   ) => {
     const togglingReactions = this.state.childReactionsBeingToggled[kind] || {};
@@ -486,8 +456,10 @@ export class FeedManager<
         } else {
           outerId = null;
         }
+        // @ts-expect-error
         activityIdToPath = this.addFoundActivityIdPath(
           activities.getIn(groupArrayPath).toJS(),
+          // @ts-expect-error
           activityIdToPath,
           groupArrayPath,
         );
@@ -608,9 +580,7 @@ export class FeedManager<
 
   feed = () => this.props.client.feed(this.props.feedGroup, this.props.userId);
 
-  responseToActivityMap = (
-    response: FeedAPIResponse<UT, AT, CT, RT, CRT>,
-  ): immutable.Map<string, immutable.Record<ResponseResult<UT, AT, CT, RT, CRT>>> =>
+  responseToActivityMap = (response: FeedAPIResponse<T>): immutable.Map<string, immutable.Record<ResponseResult<T>>> =>
     immutable.fromJS(
       // @ts-expect-error
       response.results.reduce((map: Record<string, ResponseResult>, a: ResponseResult) => {
@@ -619,11 +589,11 @@ export class FeedManager<
       }, {}),
     );
 
-  responseToActivityIdToPath = (response: FeedAPIResponse<UT, AT, CT, RT, CRT>) => {
+  responseToActivityIdToPath = (response: FeedAPIResponse<T>) => {
     if (response.results.length === 0 || response.results[0].activities === undefined) {
       return {};
     }
-    const results = response.results as AggregatedActivityEnriched<UT, AT, CT, RT, CRT>[];
+    const results = response.results as AggregatedActivityEnriched<T>[];
 
     const map: Record<string, Array<string | number>> = {};
     for (const group of results) {
@@ -635,12 +605,12 @@ export class FeedManager<
   };
 
   responseToActivityIdToPaths = (
-    response: FeedAPIResponse<UT, AT, CT, RT, CRT>,
-    previous: FeedManagerState['activityIdToPaths'] = {},
+    response: FeedAPIResponse<T>,
+    previous: FeedManagerState<T>['activityIdToPaths'] = {},
   ) => {
     const map = previous;
     const currentPath: Array<string | number> = [];
-    function addFoundActivities(obj: ResponseResult | ResponseResult[]) {
+    function addFoundActivities(obj: ResponseResult<T> | ResponseResult<T>[]) {
       if (Array.isArray(obj)) {
         obj.forEach((v, i) => {
           currentPath.push(i);
@@ -673,12 +643,12 @@ export class FeedManager<
   };
 
   feedResponseToReactionIdToPaths = (
-    response: FeedAPIResponse<UT, AT, CT, RT, CRT>,
-    previous: FeedManagerState['reactionIdToPaths'] = {},
+    response: FeedAPIResponse<T>,
+    previous: FeedManagerState<T>['reactionIdToPaths'] = {},
   ) => {
     const map = previous;
     const currentPath: Array<string | number> = [];
-    function addFoundReactions(obj: ResponseResult | ResponseResult[]) {
+    function addFoundReactions(obj: ResponseResult<T> | ResponseResult<T>[]) {
       if (Array.isArray(obj)) {
         obj.forEach((v, i) => {
           currentPath.push(i);
@@ -711,8 +681,8 @@ export class FeedManager<
   };
 
   reactionResponseToReactionIdToPaths = (
-    response: ReactionFilterAPIResponse<RT, CRT, AT, UT>,
-    previous: FeedManagerState['reactionIdToPaths'],
+    response: ReactionFilterAPIResponse<T>,
+    previous: FeedManagerState<T>['reactionIdToPaths'],
     basePath: Array<string | number>,
     oldLength: number,
   ) => {
@@ -752,7 +722,7 @@ export class FeedManager<
 
   removeFoundReactionIdPaths = (
     data: EnrichedReaction | EnrichedReaction[],
-    previous: FeedManagerState['reactionIdToPaths'],
+    previous: FeedManagerState<T>['reactionIdToPaths'],
     basePath: Array<string | number>,
   ) => {
     const map = previous;
@@ -785,13 +755,13 @@ export class FeedManager<
   };
 
   removeFoundActivityIdPaths = (
-    data: ResponseResult | ResponseResult[],
-    previous: FeedManagerState['activityIdToPaths'],
+    data: ResponseResult<T> | ResponseResult<T>[],
+    previous: FeedManagerState<T>['activityIdToPaths'],
     basePath: Array<string | number>,
   ) => {
     const map = previous;
     const currentPath = [...basePath];
-    function addFoundActivities(obj: ResponseResult | ResponseResult[]) {
+    function addFoundActivities(obj: ResponseResult<T> | ResponseResult<T>[]) {
       if (Array.isArray(obj)) {
         obj.forEach((v, i) => {
           currentPath.push(i);
@@ -819,8 +789,8 @@ export class FeedManager<
   };
 
   removeFoundActivityIdPath = (
-    data: ResponseResult[],
-    previous: FeedManagerState['activityIdToPath'],
+    data: ResponseResult<T>[],
+    previous: FeedManagerState<T>['activityIdToPath'],
     basePath: Array<string | number>,
   ) => {
     const map = previous;
@@ -837,7 +807,7 @@ export class FeedManager<
 
   addFoundReactionIdPaths = (
     data: EnrichedReaction | EnrichedReaction[],
-    previous: FeedManagerState['reactionIdToPaths'],
+    previous: FeedManagerState<T>['reactionIdToPaths'],
     basePath: Array<string | number>,
   ) => {
     const map = previous;
@@ -870,13 +840,13 @@ export class FeedManager<
   };
 
   addFoundActivityIdPaths = (
-    data: ResponseResult | ResponseResult[],
-    previous: FeedManagerState['activityIdToPaths'],
+    data: ResponseResult<T> | ResponseResult<T>[],
+    previous: FeedManagerState<T>['activityIdToPaths'],
     basePath: Array<string | number>,
   ) => {
     const map = previous;
     const currentPath = [...basePath];
-    function addFoundActivities(obj: ResponseResult | ResponseResult[]) {
+    function addFoundActivities(obj: ResponseResult<T> | ResponseResult<T>[]) {
       if (Array.isArray(obj)) {
         obj.forEach((v, i) => {
           currentPath.push(i);
@@ -903,24 +873,25 @@ export class FeedManager<
   };
 
   addFoundActivityIdPath = (
-    data: ResponseResult[],
-    previous: FeedManagerState['activityIdToPath'],
+    data: ResponseResult<T>[],
+    previous: FeedManagerState<T>,
     basePath: Array<string | number>,
   ) => {
     const map = previous;
     data.forEach((obj, i) => {
+      // @ts-expect-error
       map[obj.id] = [...basePath, i];
     });
     return map;
   };
 
-  responseToReactionActivities = (response: FeedAPIResponse<UT, AT, CT, RT, CRT>) => {
+  responseToReactionActivities = (response: FeedAPIResponse<T>) => {
     if (response.results.length === 0) {
       return {};
     }
 
     const map: Record<string, string> = {};
-    function setReactionActivities(activities: EnrichedActivity<UT, AT, CT, RT, CRT>[]) {
+    function setReactionActivities(activities: EnrichedActivity<T>[]) {
       for (const a of activities) {
         if (a.reaction && a.reaction.id) {
           map[a.reaction.id] = a.id;
@@ -929,9 +900,9 @@ export class FeedManager<
     }
 
     if (response.results[0].activities === undefined) {
-      setReactionActivities(response.results as EnrichedActivity<UT, AT, CT, RT, CRT>[]);
+      setReactionActivities(response.results as EnrichedActivity<T>[]);
     } else {
-      const aggregatedResults = response.results as AggregatedActivityEnriched<UT, AT, CT, RT, CRT>[];
+      const aggregatedResults = response.results as AggregatedActivityEnriched<T>[];
 
       for (const group of aggregatedResults) {
         setReactionActivities(group.activities);
@@ -940,7 +911,7 @@ export class FeedManager<
     return map;
   };
 
-  unseenUnreadFromResponse(response: FeedAPIResponse<UT, AT, CT, RT, CRT>) {
+  unseenUnreadFromResponse(response: FeedAPIResponse<T>) {
     let unseen = 0;
     let unread = 0;
     if (typeof response.unseen === 'number') {
@@ -956,7 +927,7 @@ export class FeedManager<
     const options = this.getOptions(extraOptions);
 
     await this.setState({ refreshing: true });
-    let response: FeedAPIResponse<UT, AT, CT, RT, CRT>;
+    let response: FeedAPIResponse<T>;
     try {
       response = await this.doFeedRequest(options);
     } catch (e) {
@@ -969,7 +940,7 @@ export class FeedManager<
     }
 
     const newState = {
-      activityOrder: response.results.map((a: ResponseResult) => a.id),
+      activityOrder: response.results.map((a: ResponseResult<T>) => a.id),
       activities: this.responseToActivityMap(response),
       activityIdToPath: this.responseToActivityIdToPath(response),
       activityIdToPaths: this.responseToActivityIdToPaths(response),
@@ -1074,7 +1045,7 @@ export class FeedManager<
     const nextURL = new URL(lastResponse.next, true);
     const options = this.getOptions(nextURL.query);
 
-    let response: FeedAPIResponse<UT, AT, CT, RT, CRT>;
+    let response: FeedAPIResponse<T>;
     try {
       response = await this.doFeedRequest(options);
     } catch (e) {
@@ -1094,7 +1065,7 @@ export class FeedManager<
       };
 
       return {
-        activityOrder: prevState.activityOrder.concat(response.results.map((a: ResponseResult) => a.id)),
+        activityOrder: prevState.activityOrder.concat(response.results.map((a: ResponseResult<T>) => a.id)),
         activities,
         activityIdToPath,
         activityIdToPaths: this.responseToActivityIdToPaths(response, prevState.activityIdToPaths),
@@ -1130,7 +1101,7 @@ export class FeedManager<
     const nextURL = new URL(lastReverseResponse.next, true);
     const options = this.getOptions(nextURL.query);
 
-    let response: FeedAPIResponse<UT, AT, CT, RT, CRT>;
+    let response: FeedAPIResponse<T>;
     try {
       response = await this.doFeedRequest(options);
     } catch (e) {
@@ -1150,7 +1121,7 @@ export class FeedManager<
       };
 
       return {
-        activityOrder: response.results.map((a: ResponseResult) => a.id).concat(prevState.activityOrder),
+        activityOrder: response.results.map((a: ResponseResult<T>) => a.id).concat(prevState.activityOrder),
         activities,
         activityIdToPath,
         activityIdToPaths: this.responseToActivityIdToPaths(response, prevState.activityIdToPaths),
@@ -1205,7 +1176,7 @@ export class FeedManager<
 
     options = { ...URL(nextUrl, true).query, ...options };
 
-    let response: ReactionFilterAPIResponse<RT, CRT, AT, UT>;
+    let response: ReactionFilterAPIResponse<T>;
     try {
       if (this.props.doReactionsFilterRequest) {
         response = await this.props.doReactionsFilterRequest(options);
@@ -1232,7 +1203,7 @@ export class FeedManager<
   };
 
   refreshUnreadUnseen = async () => {
-    let response: FeedAPIResponse<UT, AT, CT, RT, CRT>;
+    let response: FeedAPIResponse<T>;
     try {
       response = await this.doFeedRequest({ limit: 0 });
     } catch (e) {

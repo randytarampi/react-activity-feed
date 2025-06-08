@@ -1,5 +1,5 @@
+import { Activity, NewActivity } from 'getstream';
 import React, { ReactNode } from 'react';
-import { Activity, NewActivity, UR } from 'getstream';
 import {
   FilePreviewer,
   FileUpload,
@@ -10,26 +10,25 @@ import {
   ImageUploadButton,
   LoadingIndicator,
 } from 'react-file-utils';
-
-import { DefaultAT, DefaultUT, useTranslationContext } from '../../context';
+import { TransportType, useTranslationContext } from '../../context';
 import { ElementOrComponentOrLiteralType, PropsWithElementAttributes, smartRender } from '../../utils';
-import { useStatusUpdateForm } from './useStatusUpdateForm';
+import { Audio } from '../Audio';
+import { Avatar } from '../Avatar';
+import { Button } from '../Button';
+import { Card } from '../Card';
+import { EmojiPicker, EmojiPickerProps } from '../EmojiPicker';
+import { BookmarkIcon } from '../Icons';
 import { Panel, PanelContent, PanelFooter, PanelHeading } from '../Panel';
 import { Textarea as DefaultTextarea, TextareaProps } from '../Textarea';
-import { Avatar } from '../Avatar';
-import { Card } from '../Card';
-import { Audio } from '../Audio';
-import { Video } from '../Video';
-import { EmojiPicker, EmojiPickerProps } from '../EmojiPicker';
-import { Button } from '../Button';
 import { Title } from '../Title';
-import { BookmarkIcon } from '../Icons';
+import { Video } from '../Video';
+import { useStatusUpdateForm } from './useStatusUpdateForm';
 
-export type StatusUpdateFormProps<AT extends DefaultAT = DefaultAT> = PropsWithElementAttributes<{
+export type StatusUpdateFormProps<T extends TransportType> = PropsWithElementAttributes<{
   /** The verb that should be used to post the activity, default to "post" */
   activityVerb?: string;
   /** Override Post request */
-  doRequest?: (activity: NewActivity<AT>) => Promise<Activity<AT>>;
+  doRequest?: (activity: NewActivity<T>) => Promise<Activity<T>>;
   /** Override the default emoji dataset, library has a light set of emojis
    * to show more emojis use your own or [emoji-mart sets](https://github.com/missive/emoji-mart#datasets)
    */
@@ -55,9 +54,9 @@ export type StatusUpdateFormProps<AT extends DefaultAT = DefaultAT> = PropsWithE
    * />
    * ```
    * */
-  modifyActivityData?: (activity: NewActivity<AT>) => NewActivity<AT>;
+  modifyActivityData?: (activity: NewActivity<T>) => NewActivity<T>;
   /** A callback to run after the activity is posted successfully */
-  onSuccess?: (activity: Activity<AT>) => void;
+  onSuccess?: (activity: Activity<T>) => void;
   /** Custom Textarea component implementation */
   Textarea?: ElementOrComponentOrLiteralType<Omit<TextareaProps, 'maxLength' | 'rows'>>;
   /** An extra trigger for ReactTextareaAutocomplete, this can be used to show
@@ -68,14 +67,7 @@ export type StatusUpdateFormProps<AT extends DefaultAT = DefaultAT> = PropsWithE
   userId?: string;
 }>;
 
-export function StatusUpdateForm<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export function StatusUpdateForm<T extends TransportType>({
   feedGroup = 'user',
   activityVerb = 'post',
   modifyActivityData,
@@ -90,9 +82,9 @@ export function StatusUpdateForm<
   onSuccess,
   style,
   className,
-}: StatusUpdateFormProps<AT>) {
+}: StatusUpdateFormProps<T>) {
   const { t } = useTranslationContext();
-  const state = useStatusUpdateForm<UT, AT, CT, RT, CRT, PT>({
+  const state = useStatusUpdateForm<T>({
     feedGroup,
     activityVerb,
     modifyActivityData,

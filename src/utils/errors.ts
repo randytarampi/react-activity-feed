@@ -1,3 +1,4 @@
+import { TransportType } from 'context';
 import { StreamApiError, UR } from 'getstream';
 
 export type NetworkRequestTypes =
@@ -28,7 +29,7 @@ type ErrorDetail = UR & {
 };
 
 export type ErrorHandler = (
-  error: Error | StreamApiError | unknown,
+  error: Error | StreamApiError<TransportType> | unknown,
   type: NetworkRequestTypes,
   details: ErrorDetail,
 ) => void;

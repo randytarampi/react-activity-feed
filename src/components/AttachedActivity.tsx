@@ -1,25 +1,21 @@
-import React, { useMemo } from 'react';
 import classNames from 'classnames';
 import { EnrichedActivity } from 'getstream';
+import React, { useMemo } from 'react';
 import { Thumbnail } from 'react-file-utils';
+import { TransportType } from '../context/StreamApp';
+import { PropsWithElementAttributes, userOrDefault } from '../utils';
 
-import { userOrDefault, PropsWithElementAttributes } from '../utils';
-import { DefaultUT, DefaultAT } from '../context/StreamApp';
-
-export type AttachedActivityProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT
-> = PropsWithElementAttributes<{
-  activity: EnrichedActivity<UT, AT>;
+export type AttachedActivityProps<T extends TransportType> = PropsWithElementAttributes<{
+  activity: EnrichedActivity<T>;
 }>;
 
-export function AttachedActivity<UT extends DefaultUT = DefaultUT, AT extends DefaultAT = DefaultAT>({
+export function AttachedActivity<T extends TransportType>({
   activity: { object, verb, attachments, actor },
   className,
   style,
-}: AttachedActivityProps<UT, AT>) {
+}: AttachedActivityProps<T>) {
   const images = attachments?.images ?? [];
-  const user = useMemo(() => userOrDefault<UT>(actor), [actor]);
+  const user = useMemo(() => userOrDefault<T>(actor), [actor]);
 
   if (verb !== 'repost' && verb !== 'post' && verb !== 'comment') return null;
 

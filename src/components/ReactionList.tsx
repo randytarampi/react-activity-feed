@@ -1,16 +1,15 @@
-import React, { useEffect } from 'react';
+import { EnrichedReaction } from 'getstream';
 import immutable from 'immutable';
-import { UR, EnrichedReaction } from 'getstream';
-
+import React, { useEffect } from 'react';
+import { TransportType, useFeedContext } from '../context';
+import { ElementOrComponentOrLiteralType, smartRender } from '../utils';
 import { LoadMorePaginator, LoadMorePaginatorProps } from './LoadMorePaginator';
-import { useFeedContext, DefaultUT, DefaultAT } from '../context';
-import { smartRender, ElementOrComponentOrLiteralType } from '../utils';
 
-export type ReactionListType<UT extends DefaultUT = DefaultUT, RT extends UR = UR, CRT extends UR = UR> = {
+export type ReactionListType<T extends TransportType> = {
   /** The ID of the activity for which these reactions are */
   activityId: string;
   /** The component that should render the reaction */
-  Reaction: ElementOrComponentOrLiteralType<{ reaction: EnrichedReaction<RT, CRT, UT>; key?: string }>;
+  Reaction: ElementOrComponentOrLiteralType<{ reaction: EnrichedReaction<T>; key?: string }>;
   /** The reaction kind that you want to display in this list, e.g `like` or `comment` */
   reactionKind: string;
   /** Only needed for reposted activities where you want to show the reactions
@@ -28,14 +27,7 @@ export type ReactionListType<UT extends DefaultUT = DefaultUT, RT extends UR = U
   reverseOrder?: boolean;
 };
 
-export const ReactionList = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export const ReactionList = <T extends TransportType>({
   activityId,
   Reaction,
   reactionKind,
@@ -43,8 +35,8 @@ export const ReactionList = <
   oldestToNewest = false,
   Paginator = LoadMorePaginator,
   reverseOrder = false,
-}: ReactionListType<UT, RT, CRT>) => {
-  const feed = useFeedContext<UT, AT, CT, RT, CRT, PT>();
+}: ReactionListType<T>) => {
+  const feed = useFeedContext<T>();
 
   const activityPath = defaultActivityPath || feed.getActivityPath(activityId);
   const orderPrefix = oldestToNewest ? 'oldest' : 'latest';

@@ -1,33 +1,18 @@
+import { EnrichedActivity } from 'getstream';
 import React from 'react';
-import { EnrichedActivity, UR } from 'getstream';
 import { LoadingIndicator as DefaultLoadingIndicator, LoadingIndicatorProps } from 'react-file-utils';
-
-import { Activity as DefaultActivity, ActivityProps } from './Activity';
-import { NewActivitiesNotification, NewActivitiesNotificationProps } from './NewActivitiesNotification';
-import { LoadMorePaginator, LoadMorePaginatorProps } from './LoadMorePaginator';
+import { Feed, FeedManagerProps, FeedProps, TransportType, useFeedContext, useTranslationContext } from '../context';
+import { ElementOrComponentOrLiteralType, smartRender } from '../utils';
+import { ActivityProps, Activity as DefaultActivity } from './Activity';
 import { FeedPlaceholder, FeedPlaceholderProps } from './FeedPlaceholder';
-import { smartRender, ElementOrComponentOrLiteralType } from '../utils';
-import {
-  Feed,
-  useFeedContext,
-  useTranslationContext,
-  DefaultAT,
-  DefaultUT,
-  FeedManagerProps,
-  FeedProps,
-} from '../context';
+import { LoadMorePaginator, LoadMorePaginatorProps } from './LoadMorePaginator';
+import { NewActivitiesNotification, NewActivitiesNotificationProps } from './NewActivitiesNotification';
 
-type FlatFeedInnerProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = {
+type FlatFeedInnerProps<T extends TransportType> = {
   /** The component used to render an activity in the feed
    * #Activity (Component)#
    */
-  Activity: ElementOrComponentOrLiteralType<ActivityProps<UT, AT, CT, RT, CRT>>;
+  Activity: ElementOrComponentOrLiteralType<ActivityProps<T>>;
   /** Component to show when the feed is refreshing
    * #LoadingIndicator (Component)#
    */
@@ -46,19 +31,12 @@ type FlatFeedInnerProps<
    */
   Placeholder: ElementOrComponentOrLiteralType<FeedPlaceholderProps>;
   /** Read options for the API client (eg. limit, ranking, ...) */
-  options?: FeedProps['options'];
+  options?: FeedProps<T>['options'];
 };
 
-export type FlatFeedProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> = Partial<FlatFeedInnerProps<UT, AT, CT, RT, CRT>> &
+export type FlatFeedProps<T extends TransportType> = Partial<FlatFeedInnerProps<T>> &
   Pick<
-    FeedManagerProps<UT, AT, CT, RT, CRT, PT>,
+    FeedManagerProps<T>,
     | 'analyticsLocation'
     | 'doActivityDeleteRequest'
     | 'doChildReactionAddRequest'
@@ -76,22 +54,15 @@ const DefaultNotifier = (props: NewActivitiesNotificationProps) => (
   <NewActivitiesNotification labelPlural="activities" labelSingle="activity" {...props} />
 );
 
-const FlatFeedInner = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+const FlatFeedInner = <T extends TransportType>({
   Activity,
   Notifier,
   Placeholder,
   Paginator,
   LoadingIndicator,
   options,
-}: FlatFeedInnerProps<UT, AT, CT, RT, CRT>) => {
-  const feed = useFeedContext<UT, AT, CT, RT, CRT, PT>();
+}: FlatFeedInnerProps<T>) => {
+  const feed = useFeedContext<T>();
   const { t } = useTranslationContext();
 
   const refreshFeed = () => feed.refresh(options);
@@ -116,8 +87,8 @@ const FlatFeedInner = <
             hasNextPage: feed.hasNextPage,
             refreshing: feed.refreshing,
             children: feed.activityOrder.map((id) =>
-              smartRender<ActivityProps<UT, AT, CT, RT, CRT>>(Activity, {
-                activity: feed.activities.get(id)?.toJS() as EnrichedActivity<UT, AT, CT, RT, CRT>,
+              smartRender<ActivityProps<T>>(Activity, {
+                activity: feed.activities.get(id)?.toJS() as EnrichedActivity<T>,
                 feedGroup: feed.feedGroup,
                 userId: feed.userId,
                 // @ts-expect-error
@@ -133,14 +104,7 @@ const FlatFeedInner = <
  * Renders a feed of activities, this component is a StreamApp consumer
  * and must always be a child of the `<StreamApp>` element
  */
-export const FlatFeed = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export const FlatFeed = <T extends TransportType>({
   userId,
   options,
   analyticsLocation,
@@ -158,9 +122,9 @@ export const FlatFeed = <
   Placeholder = FeedPlaceholder,
   Paginator = LoadMorePaginator,
   LoadingIndicator = DefaultLoadingIndicator,
-}: FlatFeedProps<UT, AT, CT, RT, CRT, PT>) => {
+}: FlatFeedProps<T>) => {
   return (
-    <Feed<UT, AT, CT, RT, CRT, PT>
+    <Feed<T>
       feedGroup={feedGroup}
       userId={userId}
       options={options}
@@ -174,7 +138,7 @@ export const FlatFeed = <
       doChildReactionDeleteRequest={doChildReactionDeleteRequest}
       doReactionsFilterRequest={doReactionsFilterRequest}
     >
-      <FlatFeedInner<UT, AT, CT, RT, CRT>
+      <FlatFeedInner<T>
         Activity={Activity}
         Notifier={Notifier}
         Placeholder={Placeholder}

@@ -1,37 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
-import { UR } from 'getstream';
-
-import { Feed, useFeedContext, DefaultAT, DefaultUT } from '../context';
-import { smartRender, ElementOrComponentOrLiteralType, PropsWithElementAttributes } from '../utils';
+import React, { useEffect, useRef, useState } from 'react';
+import { Feed, TransportType, useFeedContext } from '../context';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
-import { NotificationFeed, NotificationFeedProps } from './NotificationFeed';
+import { ElementOrComponentOrLiteralType, PropsWithElementAttributes, smartRender } from '../utils';
 import { DropdownPanel, DropdownPanelProps } from './DropdownPanel';
 import { IconBadge } from './IconBadge';
+import { NotificationFeed, NotificationFeedProps } from './NotificationFeed';
 
-export type NotificationDropdownProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> = PropsWithElementAttributes<
+export type NotificationDropdownProps<T extends TransportType> = PropsWithElementAttributes<
   {
     Icon?: ElementOrComponentOrLiteralType;
     width?: number;
   } & Pick<DropdownPanelProps, 'Footer' | 'Header' | 'right'> &
-    NotificationFeedProps<UT, AT, CT, RT, CRT, PT>
+    NotificationFeedProps<T>
 >;
 
-const NotificationDropdownInner = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+const NotificationDropdownInner = <T extends TransportType>({
   width,
   Footer,
   Header,
@@ -40,8 +24,8 @@ const NotificationDropdownInner = <
   className,
   style,
   ...feedProps
-}: NotificationDropdownProps<UT, AT, CT, RT, CRT, PT>) => {
-  const feed = useFeedContext<UT, AT, CT, RT, CRT, PT>();
+}: NotificationDropdownProps<T>) => {
+  const feed = useFeedContext<T>();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(dropdownRef, () => setOpen(false), open);
@@ -77,14 +61,7 @@ const NotificationDropdownInner = <
  * IMPORTANT: Changing most of the props below doesn't result in the desired effect.
  * These settings related to feed management should be changed in the `sharedFeeds` prop of the [`StreamApp`](#streamapp) component.
  */
-export const NotificationDropdown = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export const NotificationDropdown = <T extends TransportType>({
   width = 475,
   Footer,
   Header,
@@ -93,12 +70,12 @@ export const NotificationDropdown = <
   feedGroup = 'notification',
   options,
   ...feedProps
-}: NotificationDropdownProps<UT, AT, CT, RT, CRT, PT>) => {
+}: NotificationDropdownProps<T>) => {
   const optionsWithDefaults = { ...options, mark_seen: options?.mark_seen ?? true };
 
   return (
-    <Feed<UT, AT, CT, RT, CRT, PT> {...feedProps} feedGroup={feedGroup} options={optionsWithDefaults}>
-      <NotificationDropdownInner<UT, AT, CT, RT, CRT, PT>
+    <Feed<T> {...feedProps} feedGroup={feedGroup} options={optionsWithDefaults}>
+      <NotificationDropdownInner<T>
         width={width}
         Footer={Footer}
         Header={Header}

@@ -1,48 +1,32 @@
-import React from 'react';
 import classNames from 'classnames';
-import { UR } from 'getstream';
-
+import React from 'react';
+import { TransportType } from '../context/StreamApp';
+import { ActivityProps } from './Activity';
+import { Flex } from './Flex';
 import { LikeButton } from './LikeButton';
 import { RepostButton } from './RepostButton';
-import { Flex } from './Flex';
-import { DefaultAT, DefaultUT } from '../context/StreamApp';
-import { ActivityProps } from './Activity';
 
-export type ActivityFooterProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = Pick<ActivityProps<UT, AT, CT, RT, CRT>, 'activity' | 'feedGroup' | 'userId' | 'className' | 'style'> & {
+export type ActivityFooterProps<T extends TransportType> = Pick<
+  ActivityProps<T>,
+  'activity' | 'feedGroup' | 'userId' | 'className' | 'style'
+> & {
   targetFeeds?: string[];
 };
 
-export const ActivityFooter = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
->({
+export const ActivityFooter = <T extends TransportType>({
   activity,
   feedGroup = 'user',
   userId,
   targetFeeds,
   className,
   style,
-}: ActivityFooterProps<UT, AT, CT, RT, CRT>) => (
+}: ActivityFooterProps<T>) => (
   <div className={classNames('raf-activity-footer', className)} style={style}>
     <div className="raf-activity-footer__left" />
     <div className="raf-activity-footer__right">
       <Flex a="center">
-        <LikeButton<UT, AT, CT, RT, CRT> activity={activity} targetFeeds={targetFeeds} />
-        <RepostButton<UT, AT, CT, RT, CRT>
-          activity={activity}
-          targetFeeds={targetFeeds}
-          feedGroup={feedGroup}
-          userId={userId}
-        />
+        <LikeButton<T> activity={activity} targetFeeds={targetFeeds} />
+        <RepostButton<T> activity={activity} targetFeeds={targetFeeds} feedGroup={feedGroup} userId={userId} />
       </Flex>
     </div>
   </div>

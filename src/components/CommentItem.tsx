@@ -1,41 +1,36 @@
-import React from 'react';
 import classNames from 'classnames';
-import { EnrichedReaction, UR } from 'getstream';
-
-import { Flex } from './Flex';
-import { Avatar } from './Avatar';
+import { EnrichedReaction } from 'getstream';
+import React from 'react';
+import { useTranslationContext } from '../context';
+import { TransportType } from '../context/StreamApp';
 import {
+  OnClickUserHandler,
+  PropsWithElementAttributes,
   humanizeTimestamp,
   textRenderer,
-  OnClickUserHandler,
   useOnClickUser,
-  PropsWithElementAttributes,
 } from '../utils';
-import { useTranslationContext } from '../context';
-import { DefaultUT } from '../context/StreamApp';
+import { Avatar } from './Avatar';
+import { Flex } from './Flex';
 
-export type CommentItemProps<
-  UT extends DefaultUT = DefaultUT,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = PropsWithElementAttributes<
+export type CommentItemProps<T extends TransportType> = PropsWithElementAttributes<
   {
-    comment: EnrichedReaction<RT, CRT, UT>;
-    onClickUser?: OnClickUserHandler<UT>;
+    comment: EnrichedReaction<T>;
+    onClickUser?: OnClickUserHandler<T>;
   } & Partial<Record<'onClickMention' | 'onClickHashtag', (word: string) => void>>
 >;
 
-export const CommentItem = <UT extends DefaultUT = DefaultUT, RT extends UR = UR, CRT extends UR = UR>({
+export const CommentItem = <T extends TransportType>({
   comment: { user, created_at, data },
   onClickHashtag,
   onClickMention,
   onClickUser,
   className,
   style,
-}: CommentItemProps<UT, RT, CRT>) => {
+}: CommentItemProps<T>) => {
   const { tDateTimeParser } = useTranslationContext();
 
-  const handleUserClick = useOnClickUser<UT, SVGSVGElement | HTMLSpanElement>(onClickUser);
+  const handleUserClick = useOnClickUser<T, SVGSVGElement | HTMLSpanElement>(onClickUser);
 
   return (
     <div className={classNames('raf-comment-item', className)} style={style}>

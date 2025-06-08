@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { StreamApp } from '../context';
+import { StreamApp, TransportType } from '../context';
 import { NotificationProps } from './Notification';
 
 export const WithExampleStreamApp: FC = ({ children }) => (
@@ -12,7 +12,7 @@ export const WithExampleStreamApp: FC = ({ children }) => (
   </StreamApp>
 );
 
-export const notificationGroup1: NotificationProps['activityGroup'] = {
+export const notificationGroup1: NotificationProps<TransportType>['activityGroup'] = {
   activities: [
     {
       // @ts-expect-error
@@ -35,7 +35,7 @@ export const notificationGroup1: NotificationProps['activityGroup'] = {
   ],
 };
 
-export const notificationGroup2: NotificationProps['activityGroup'] = {
+export const notificationGroup2: NotificationProps<TransportType>['activityGroup'] = {
   activities: [
     {
       // @ts-expect-error

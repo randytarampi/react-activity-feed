@@ -1,27 +1,26 @@
-import React from 'react';
 import classNames from 'classnames';
 import { EnrichedUser } from 'getstream';
-
-import { useOnClickUser, OnClickUserHandler, PropsWithElementAttributes } from '../utils';
-import { DefaultUT } from '../context/StreamApp';
+import React from 'react';
+import { TransportType } from '../context/StreamApp';
+import { OnClickUserHandler, PropsWithElementAttributes, useOnClickUser } from '../utils';
 import { Avatar } from './Avatar';
 
-export type AvatarGroupProps<UT extends DefaultUT = DefaultUT> = PropsWithElementAttributes<{
+export type AvatarGroupProps<T extends TransportType> = PropsWithElementAttributes<{
   avatarSize?: number;
   limit?: number;
-  onClickUser?: OnClickUserHandler<UT>;
-  users?: Array<EnrichedUser<UT>>;
+  onClickUser?: OnClickUserHandler<T>;
+  users?: Array<EnrichedUser<T>>;
 }>;
 
-export function AvatarGroup<UT extends DefaultUT = DefaultUT>({
+export function AvatarGroup<T extends TransportType>({
   limit = 5,
   users = [],
   avatarSize = 30,
   onClickUser,
   className,
   style,
-}: AvatarGroupProps<UT>) {
-  const handleUserClick = useOnClickUser<UT>(onClickUser);
+}: AvatarGroupProps<T>) {
+  const handleUserClick = useOnClickUser<T>(onClickUser);
 
   return (
     <div className={classNames('raf-avatar-group', className)} style={style}>

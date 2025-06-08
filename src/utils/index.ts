@@ -1,12 +1,12 @@
-import React, { useMemo, MouseEvent, DetailedHTMLProps, HTMLAttributes } from 'react';
-import URL from 'url-parse';
 import Dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import minMax from 'dayjs/plugin/minMax';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { EnrichedUser, UR } from 'getstream';
+import utc from 'dayjs/plugin/utc';
+import { EnrichedUser, UR, UnknownRecord } from 'getstream';
+import React, { DetailedHTMLProps, HTMLAttributes, MouseEvent, useMemo } from 'react';
+import URL from 'url-parse';
+import { DefaultAT, TransportType } from '../context/StreamApp';
 import { TDateTimeParser } from '../i18n/Streami18n';
-import { DefaultUT } from '../context/StreamApp';
 Dayjs.extend(utc);
 Dayjs.extend(minMax);
 Dayjs.extend(relativeTime);
@@ -36,11 +36,18 @@ function isErrorUser(user: unknown | ErrorUser): user is ErrorUser {
   return !!user && typeof (user as ErrorUser).error === 'string';
 }
 
-export type UserOrDefaultReturnType<T extends UR = UR> =
+export type UserOrDefaultReturnType<T extends TransportType> =
   | EnrichedUser<T>
-  | (EnrichedUser<{ name: 'Unknown'; profileImage: '' }> & { id: '!not-found' });
+  | (EnrichedUser<{
+      activityType: DefaultAT;
+      childReactionType: UnknownRecord;
+      collectionType: UnknownRecord;
+      personalizationType: UnknownRecord;
+      reactionType: UnknownRecord;
+      userType: { name: 'Unknown'; profileImage: '' };
+    }> & { id: '!not-found' });
 
-export function userOrDefault<T extends UR = UR>(
+export function userOrDefault<T extends TransportType>(
   user?: EnrichedUser<T> | UserOrDefaultReturnType<T> | string | { error: string } | null,
 ): UserOrDefaultReturnType<T> {
   if (!user || typeof user === 'string' || isErrorUser(user))
@@ -171,19 +178,19 @@ export const trimURL = (url?: string) =>
     .split('/')
     .shift();
 
-export type OnClickUserHandler<UT extends DefaultUT = DefaultUT> = (user: UserOrDefaultReturnType<UT>) => void;
+export type OnClickUserHandler<T extends TransportType> = (user: UserOrDefaultReturnType<T>) => void;
 export const useOnClickUser = <
-  UT extends DefaultUT = DefaultUT,
+  T extends TransportType,
   E extends HTMLElement | SVGGElement = HTMLImageElement | SVGSVGElement
 >(
-  onClickUser?: OnClickUserHandler<UT>,
+  onClickUser?: OnClickUserHandler<T>,
 ) =>
   useMemo(
     () =>
       onClickUser
-        ? (user?: EnrichedUser<UT> | UserOrDefaultReturnType<UT>) => (event: MouseEvent<E>) => {
+        ? (user?: EnrichedUser<T> | UserOrDefaultReturnType<T>) => (event: MouseEvent<E>) => {
             event.stopPropagation();
-            onClickUser(userOrDefault<UT>(user));
+            onClickUser(userOrDefault<T>(user));
           }
         : undefined,
     [onClickUser],

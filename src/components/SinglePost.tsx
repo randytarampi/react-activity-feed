@@ -1,31 +1,21 @@
+import { GetFeedOptions } from 'getstream';
 import React from 'react';
-import { GetFeedOptions, UR } from 'getstream';
-
-import { DefaultAT, DefaultUT } from '../context';
+import { TransportType } from '../context';
 import { FlatFeed, FlatFeedProps } from './FlatFeed';
 
-export type SinglePostProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
-> = FlatFeedProps<UT, AT, CT, RT, CRT, PT> & { activityId: string };
+export type SinglePostProps<T extends TransportType> = FlatFeedProps<T> & { activityId: string };
 
 /**
  * Shows the detail of a single activity
  */
-export function SinglePost<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({ options, activityId, doFeedRequest, ...props }: SinglePostProps<UT, AT, CT, RT, CRT, PT>) {
+export function SinglePost<T extends TransportType>({
+  options,
+  activityId,
+  doFeedRequest,
+  ...props
+}: SinglePostProps<T>) {
   return (
-    <FlatFeed<UT, AT, CT, RT, CRT, PT>
+    <FlatFeed<T>
       {...props}
       options={{ withRecentReactions: true, ...options }}
       doFeedRequest={(client, feedGroup, userId, opts) => {

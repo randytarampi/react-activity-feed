@@ -1,28 +1,27 @@
 import React from 'react';
-
-import { DefaultAT, DefaultUT } from '../context/StreamApp';
+import { TransportType } from '../context/StreamApp';
 import { useTranslationContext } from '../context/TranslationContext';
-import { userOrDefault, humanizeTimestamp, useOnClickUser } from '../utils';
+import { humanizeTimestamp, useOnClickUser, userOrDefault } from '../utils';
 import { ActivityProps } from './Activity';
 import { UserBar } from './UserBar';
 
-export type ActivityHeaderProps<UT extends DefaultUT = DefaultUT, AT extends DefaultAT = DefaultAT> = Pick<
-  ActivityProps<UT, AT>,
+export type ActivityHeaderProps<T extends TransportType> = Pick<
+  ActivityProps<T>,
   'activity' | 'HeaderRight' | 'icon' | 'onClickUser' | 'className' | 'style'
 >;
 
-export const ActivityHeader = <UT extends DefaultUT = DefaultUT, AT extends DefaultAT = DefaultAT>({
+export const ActivityHeader = <T extends TransportType>({
   activity,
   HeaderRight,
   icon,
   onClickUser,
   style = { padding: '8px 16px' },
   className,
-}: ActivityHeaderProps<UT, AT>) => {
+}: ActivityHeaderProps<T>) => {
   const { tDateTimeParser } = useTranslationContext();
 
-  const actor = userOrDefault<UT>(activity.actor);
-  const handleUserClick = useOnClickUser<UT>(onClickUser);
+  const actor = userOrDefault<T>(activity.actor);
+  const handleUserClick = useOnClickUser<T>(onClickUser);
 
   return (
     <div style={style} className={className}>

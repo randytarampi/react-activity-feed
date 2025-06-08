@@ -1,47 +1,33 @@
-import React, { SyntheticEvent } from 'react';
-import { EnrichedActivity, EnrichedUser, NotificationActivityEnriched, UR } from 'getstream';
+import { EnrichedActivity, EnrichedUser, NotificationActivityEnriched } from 'getstream';
 import { TFunction } from 'i18next';
-
-import { Avatar } from './Avatar';
-import { AvatarGroup } from './AvatarGroup';
-import { AttachedActivity } from './AttachedActivity';
-import { Dropdown } from './Dropdown';
-import { Link } from './Link';
+import React, { SyntheticEvent } from 'react';
+import { FeedManager, TransportType, useTranslationContext } from '../context';
 import {
+  OnClickUserHandler,
+  PropsWithElementAttributes,
   humanizeTimestamp,
   useOnClickUser,
   userOrDefault,
-  OnClickUserHandler,
-  PropsWithElementAttributes,
 } from '../utils';
-import { DefaultUT, DefaultAT, useTranslationContext, FeedManager } from '../context';
+import { AttachedActivity } from './AttachedActivity';
+import { Avatar } from './Avatar';
+import { AvatarGroup } from './AvatarGroup';
+import { Dropdown } from './Dropdown';
+import { Link } from './Link';
 
-export type NotificationProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = PropsWithElementAttributes<{
+export type NotificationProps<T extends TransportType> = PropsWithElementAttributes<{
   /** The activity group to display in this notification */
-  activityGroup: NotificationActivityEnriched<UT, AT, CT, RT, CRT>;
+  activityGroup: NotificationActivityEnriched<T>;
   /** Callback to call when clicking on a notification */
-  onClickNotification?: (activityGroup: NotificationActivityEnriched<UT, AT, CT, RT, CRT>) => void;
+  onClickNotification?: (activityGroup: NotificationActivityEnriched<T>) => void;
   /** Callback to call when clicking on a user in the notification */
-  onClickUser?: OnClickUserHandler<UT>;
+  onClickUser?: OnClickUserHandler<T>;
   /** Callback to mark a notification as read, if not supplied the dropdown used to mark as read will not be shown */
-  onMarkAsRead?: FeedManager<UT, AT, CT, RT, CRT>['onMarkAsRead'];
+  onMarkAsRead?: FeedManager<T>['onMarkAsRead'];
 }>;
 
-const getUsers = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
->(
-  activities: Array<EnrichedActivity<UT, AT, CT, RT, CRT>>,
-) => activities.map((item) => userOrDefault<UT>(item.actor));
+const getUsers = <T extends TransportType>(activities: Array<EnrichedActivity<T>>) =>
+  activities.map((item) => userOrDefault<T>(item.actor));
 
 const getHeaderText = (t: TFunction, activitiesLen: number, verb: string, actorName: string, activityVerb: string) => {
   if (activitiesLen === 1) {
@@ -107,20 +93,14 @@ const getHeaderText = (t: TFunction, activitiesLen: number, verb: string, actorN
   }
 };
 
-export const Notification = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
->({
+export const Notification = <T extends TransportType>({
   activityGroup,
   onMarkAsRead,
   onClickUser,
   onClickNotification,
   className,
   style,
-}: NotificationProps<UT, AT, CT, RT, CRT>) => {
+}: NotificationProps<T>) => {
   const { t, tDateTimeParser } = useTranslationContext();
   const { activities } = activityGroup;
   const [latestActivity, ...restOfActivities] = activities;
@@ -130,7 +110,7 @@ export const Notification = <
   const lastObject = latestActivity.object as EnrichedActivity;
   const lastActor = userOrDefault(latestActivity.actor);
   const headerText = getHeaderText(t, activities.length, latestActivity.verb, lastActor.data.name, lastObject.verb);
-  const handleUserClick = useOnClickUser<UT>(onClickUser);
+  const handleUserClick = useOnClickUser<T>(onClickUser);
   const handleNotificationClick = onClickNotification
     ? (e: SyntheticEvent) => {
         e.stopPropagation();
@@ -145,7 +125,7 @@ export const Notification = <
       style={style}
     >
       <Avatar
-        onClick={handleUserClick?.(lastActor as EnrichedUser<UT>)}
+        onClick={handleUserClick?.(lastActor as EnrichedUser<T>)}
         image={lastActor.data.profileImage}
         circle
         size={30}
@@ -173,7 +153,7 @@ export const Notification = <
           <small>{humanizeTimestamp(latestActivity.time, tDateTimeParser)}</small>
         </div>
         {latestActivity.verb !== 'follow' && (
-          <AttachedActivity activity={latestActivity.object as EnrichedActivity<UT, AT, CT, RT, CRT>} />
+          <AttachedActivity activity={latestActivity.object as EnrichedActivity<T>} />
         )}
       </div>
 
@@ -182,7 +162,7 @@ export const Notification = <
           <AvatarGroup
             onClickUser={onClickUser}
             avatarSize={30}
-            users={getUsers<UT, AT, CT, RT, CRT>(restOfActivities) as Array<EnrichedUser<UT>>}
+            users={getUsers<T>(restOfActivities) as Array<EnrichedUser<T>>}
           />
         )}
       </div>

@@ -1,31 +1,30 @@
-import {
-  useRef,
-  useState,
-  useCallback,
-  SyntheticEvent,
-  ClipboardEvent,
-  FormEvent,
-  useEffect,
-  useLayoutEffect,
-} from 'react';
-import _uniq from 'lodash/uniq';
+import { BaseEmoji, EmojiData } from 'emoji-mart';
+import { NewActivity, OGAPIResponse, StreamClient } from 'getstream';
+import { find as linkifyFind } from 'linkifyjs';
 import _difference from 'lodash/difference';
 import _includes from 'lodash/includes';
-import { find as linkifyFind } from 'linkifyjs';
-import { useDebouncedCallback } from 'use-debounce';
-import { BaseEmoji, EmojiData } from 'emoji-mart';
-import { UploadState } from 'react-file-utils';
-import { NewActivity, OGAPIResponse, StreamClient, UR } from 'getstream';
-
-import { DefaultAT, DefaultUT, useStreamContext } from '../../context';
-import { StatusUpdateFormProps } from './StatusUpdateForm';
+import _uniq from 'lodash/uniq';
 import {
-  generateRandomId,
-  dataTransferItemsToFiles,
+  ClipboardEvent,
+  FormEvent,
+  SyntheticEvent,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { UploadState } from 'react-file-utils';
+import { useDebouncedCallback } from 'use-debounce';
+import { NetworkRequestTypes } from 'utils/errors';
+import { TransportType, useStreamContext } from '../../context';
+import {
   dataTransferItemsHaveFiles,
+  dataTransferItemsToFiles,
+  generateRandomId,
   inputValueFromEvent,
 } from '../../utils';
-import { NetworkRequestTypes } from 'utils/errors';
+import { StatusUpdateFormProps } from './StatusUpdateForm';
 
 type Og = {
   dismissed: boolean;
@@ -362,14 +361,7 @@ const useUpload = ({ client, logErr }: UseUploadProps) => {
   };
 };
 
-export function useStatusUpdateForm<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR,
-  PT extends UR = UR
->({
+export function useStatusUpdateForm<T extends TransportType>({
   activityVerb,
   feedGroup,
   modifyActivityData,
@@ -377,14 +369,14 @@ export function useStatusUpdateForm<
   userId,
   onSuccess,
 }: { activityVerb: string; feedGroup: string } & Pick<
-  StatusUpdateFormProps<AT>,
+  StatusUpdateFormProps<T>,
   'doRequest' | 'modifyActivityData' | 'onSuccess' | 'userId'
 >) {
   const [submitting, setSubmitting] = useState(false);
 
-  const appCtx = useStreamContext<UT, AT, CT, RT, CRT, PT>();
-  const client = appCtx.client as StreamClient<UT, AT, CT, RT, CRT, PT>;
-  const userData = (appCtx.user?.data || {}) as UT;
+  const appCtx = useStreamContext<T>();
+  const client = appCtx.client as StreamClient<T>;
+  const userData = (appCtx.user?.data || {}) as T['userType'];
   const logErr: UseOgProps['logErr'] = useCallback(
     (e, type) => appCtx.errorHandler(e, type, { userId, feedGroup }),
     [],

@@ -1,38 +1,25 @@
-import React from 'react';
 import classNames from 'classnames';
+import { EnrichedActivity } from 'getstream';
+import React from 'react';
 import { FileIcon } from 'react-file-utils';
-import { EnrichedActivity, UR } from 'getstream';
-
-import { DefaultAT, DefaultUT } from '../context/StreamApp';
-import { textRenderer, smartRender, sanitizeURL } from '../utils';
+import { TransportType } from '../context/StreamApp';
+import { sanitizeURL, smartRender, textRenderer } from '../utils';
+import { ActivityProps } from './Activity';
 import { Audio } from './Audio';
-import { Video } from './Video';
 import { Card as DefaultCard } from './Card';
 import { Gallery } from './Gallery';
-import { ActivityProps } from './Activity';
+import { Video } from './Video';
 
-export type ActivityContentProps<
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
-> = ActivityProps<UT, AT, CT, RT, CRT>;
+export type ActivityContentProps<T extends TransportType> = ActivityProps<T>;
 
-export const ActivityContent = <
-  UT extends DefaultUT = DefaultUT,
-  AT extends DefaultAT = DefaultAT,
-  CT extends UR = UR,
-  RT extends UR = UR,
-  CRT extends UR = UR
->({
+export const ActivityContent = <T extends TransportType>({
   activity,
   Repost,
   Card = DefaultCard,
   className,
   style,
   ...props
-}: ActivityContentProps<UT, AT, CT, RT, CRT>) => {
+}: ActivityContentProps<T>) => {
   const {
     object,
     text = (typeof object === 'string' ? object : '').trim(),
@@ -83,7 +70,7 @@ export const ActivityContent = <
         typeof object === 'object' &&
         smartRender(Repost, {
           ...props,
-          activity: object as EnrichedActivity<UT, AT, CT, RT, CRT>,
+          activity: object as EnrichedActivity<T>,
         })}
     </div>
   );
