@@ -165,5 +165,6 @@
       "limit": "10 KB",
       "webpack": false
     }
-  ]
+  ],
+  "packageManager": "yarn@4.12.0"
 }
