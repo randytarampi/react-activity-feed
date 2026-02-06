@@ -8,11 +8,14 @@ import { Gallery } from './Gallery';
 jest.mock(
   'react-image-lightbox',
   // eslint-disable-next-line react/display-name
-  () => ({ onCloseRequest, mainSrc }: { onCloseRequest: () => void; mainSrc?: string }) => (
-    <div onClick={onCloseRequest}>
-      lightbox <span>{mainSrc}</span>
-    </div>
-  ),
+  () =>
+    // eslint-disable-next-line react/display-name
+    ({ onCloseRequest, mainSrc }: { onCloseRequest: () => void; mainSrc?: string }) =>
+      (
+        <div onClick={onCloseRequest}>
+          lightbox <span>{mainSrc}</span>
+        </div>
+      ),
 );
 
 const testData = [

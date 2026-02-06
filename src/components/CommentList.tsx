@@ -40,11 +40,7 @@ export const CommentList = <T extends TransportType>({
     Paginator={Paginator}
     activityId={activityId}
     reactionKind="comment"
-    Reaction={({ reaction: comment }) => (
-      <>
-        {smartRender<CommentItemProps<T>>(CommentItem, { comment })}
-      </>
-    )}
+    Reaction={({ reaction: comment }) => <>{smartRender<CommentItemProps<T>>(CommentItem, { comment })}</>}
     activityPath={activityPath}
     oldestToNewest={oldestToNewest}
     reverseOrder={reverseOrder}

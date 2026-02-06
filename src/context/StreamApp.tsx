@@ -73,13 +73,13 @@ export const StreamAppProvider = <T extends TransportType>({
 }: PropsWithChildren<{
   value: StreamContextValue<T>;
 }>) => (
-  <StreamContext.Provider value={(value as unknown) as StreamContextValue<TransportType>}>
+  <StreamContext.Provider value={value as unknown as StreamContextValue<TransportType>}>
     {children}
   </StreamContext.Provider>
 );
 
 export const useStreamContext = <T extends TransportType>() =>
-  (useContext(StreamContext) as unknown) as StreamContextValue<T>;
+  useContext(StreamContext) as unknown as StreamContextValue<T>;
 
 /**
  * Manages the connection with Stream. Any components that should talk to

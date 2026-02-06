@@ -69,6 +69,8 @@ export const Prop = ({ propName, prop, getPropType, isToggle }) => {
   if (!prop.type && !prop.flowType) return null;
 
   const toggle = () => setShowing((s) => !s);
+
+  /* eslint-disable react/no-unknown-property */
   return (
     <div sx={styles.line} data-testid="prop">
       <div sx={styles.content}>
@@ -103,12 +105,14 @@ export const Prop = ({ propName, prop, getPropType, isToggle }) => {
       )}
     </div>
   );
+  /* eslint-enable react/no-unknown-property */
 };
 
 export const Props = ({ props, getPropType, isToggle }) => {
   const entries = useMemo(() => Object.entries(props), [props]);
 
   return (
+    // eslint-disable-next-line react/no-unknown-property
     <div sx={styles.container} data-testid="props">
       {entries.map(([key, prop]) => (
         <Prop key={key} propName={key} prop={prop} getPropType={getPropType} isToggle={isToggle} />

@@ -181,7 +181,7 @@ export const trimURL = (url?: string) =>
 export type OnClickUserHandler<T extends TransportType> = (user: UserOrDefaultReturnType<T>) => void;
 export const useOnClickUser = <
   T extends TransportType,
-  E extends HTMLElement | SVGGElement = HTMLImageElement | SVGSVGElement
+  E extends HTMLElement | SVGGElement = HTMLImageElement | SVGSVGElement,
 >(
   onClickUser?: OnClickUserHandler<T>,
 ) =>

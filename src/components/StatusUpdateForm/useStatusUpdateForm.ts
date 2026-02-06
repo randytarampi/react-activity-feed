@@ -384,16 +384,8 @@ export function useStatusUpdateForm<T extends TransportType>({
 
   const { text, setText, insertText, onSelectEmoji, textInputRef } = useTextArea();
 
-  const {
-    resetOg,
-    setActiveOg,
-    ogActiveUrl,
-    activeOg,
-    dismissOg,
-    availableOg,
-    isOgScraping,
-    handleOgDebounced,
-  } = useOg({ client: client as StreamClient, logErr });
+  const { resetOg, setActiveOg, ogActiveUrl, activeOg, dismissOg, availableOg, isOgScraping, handleOgDebounced } =
+    useOg({ client: client as StreamClient, logErr });
 
   const {
     images,
