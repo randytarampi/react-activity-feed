@@ -8,7 +8,7 @@ export type InfiniteScrollPaginatorProps = PropsWithChildren<{
   /** indicates if there is a next page to load */
   hasNextPage?: boolean;
   /** the loading indicator to use */
-  Loader?: ElementOrComponentOrLiteralType;
+  Loader?: ElementOrComponentOrLiteralType<any>;
   /** callback to load the next page */
   loadNextPage?: () => void;
   /** indicates if there there's currently any refreshing taking place */

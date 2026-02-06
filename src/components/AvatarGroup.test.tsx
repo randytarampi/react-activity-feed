@@ -3,10 +3,9 @@ import renderer from 'react-test-renderer';
 import { render, fireEvent } from '@testing-library/react';
 import { EnrichedUser } from 'getstream';
 
-import { DefaultUT } from '../context/StreamApp';
 import { AvatarGroup } from './AvatarGroup';
 
-const users: Array<EnrichedUser<DefaultUT>> = [
+const users: Array<EnrichedUser<any>> = [
   {
     id: '1',
     created_at: '',

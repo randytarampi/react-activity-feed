@@ -71,9 +71,8 @@ export const Textarea = ({
 
   return (
     <ReactTextareaAutocomplete
-      loadingComponent={LoadingIndicator}
-      // @ts-expect-error
-      trigger={{ ...emoji, ...trigger }}
+      loadingComponent={LoadingIndicator as any}
+      trigger={{ ...emoji, ...trigger } as any}
       innerRef={
         innerRef &&
         ((el) => {

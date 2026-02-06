@@ -11,10 +11,12 @@ describe('Dropdown', () => {
       <div
         className="raf-dropdown"
       >
-        <div
+        <button
+          aria-label="Cancel upload"
           className="rfu-icon-button"
+          data-testid="cancel-upload-button"
           onClick={[Function]}
-          role="button"
+          type="button"
         >
           <svg
             className="raf-dropdown__button"
@@ -29,7 +31,7 @@ describe('Dropdown', () => {
               fillRule="evenodd"
             />
           </svg>
-        </div>
+        </button>
       </div>
     `);
   });
@@ -47,9 +49,11 @@ describe('Dropdown', () => {
       <div
         class="raf-dropdown"
       >
-        <div
+        <button
+          aria-label="Cancel upload"
           class="rfu-icon-button"
-          role="button"
+          data-testid="cancel-upload-button"
+          type="button"
         >
           <svg
             class="raf-dropdown__button"
@@ -64,7 +68,7 @@ describe('Dropdown', () => {
               fill-rule="evenodd"
             />
           </svg>
-        </div>
+        </button>
         <div
           class="raf-dropdown__box"
         >
@@ -81,9 +85,11 @@ describe('Dropdown', () => {
       <div
         class="raf-dropdown"
       >
-        <div
+        <button
+          aria-label="Cancel upload"
           class="rfu-icon-button"
-          role="button"
+          data-testid="cancel-upload-button"
+          type="button"
         >
           <svg
             class="raf-dropdown__button"
@@ -98,7 +104,7 @@ describe('Dropdown', () => {
               fill-rule="evenodd"
             />
           </svg>
-        </div>
+        </button>
       </div>
     `);
   });

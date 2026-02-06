@@ -5,7 +5,7 @@ import { render, fireEvent } from '@testing-library/react';
 import { LikeButton, LikeButtonProps } from './LikeButton';
 import { FeedProvider } from '../context';
 
-const testActivityData: LikeButtonProps['activity'] = {
+const testActivityData: LikeButtonProps<any>['activity'] = {
   id: '',
   reaction_counts: {
     like: 12,
@@ -18,7 +18,7 @@ const testActivityData: LikeButtonProps['activity'] = {
   time: '',
 };
 
-const testReactionData: LikeButtonProps['reaction'] = {
+const testReactionData: LikeButtonProps<any>['reaction'] = {
   activity_id: '',
   user_id: '',
   user: {

@@ -1,13 +1,17 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 import { fireEvent, render, act } from '@testing-library/react';
+
 import '@testing-library/jest-dom';
+
 import { CommentField, CommentFieldProps } from './CommentField';
 import { FeedProvider } from '../context';
 
 describe('CommentField', () => {
   it('renders with default props', () => {
-    const tree = renderer.create(<CommentField activity={{} as unknown as CommentFieldProps['activity']} />).toJSON();
+    const tree = renderer
+      .create(<CommentField activity={{} as unknown as CommentFieldProps<any>['activity']} />)
+      .toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <form
         className="raf-comment-field"
@@ -48,7 +52,7 @@ describe('CommentField', () => {
     const tree = renderer
       .create(
         <CommentField
-          activity={{} as unknown as CommentFieldProps['activity']}
+          activity={{} as unknown as CommentFieldProps<any>['activity']}
           image="https://getstream.imgix.net/images/random_svg/A.png"
           placeholder="Add a comment"
         />,
@@ -109,7 +113,7 @@ describe('CommentField', () => {
       // @ts-expect-error
       <FeedProvider value={{ onAddReaction }}>
         <CommentField
-          activity={{} as unknown as CommentFieldProps['activity']}
+          activity={{} as unknown as CommentFieldProps<any>['activity']}
           onSuccess={successFn}
           placeholder="textarea"
         />

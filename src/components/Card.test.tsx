@@ -54,10 +54,12 @@ describe('Card', () => {
         rel="nofollow noreferrer noopener"
         target="blank"
       >
-        <div
+        <button
+          aria-label="Cancel upload"
           className="rfu-icon-button"
+          data-testid="cancel-upload-button"
           onClick={[Function]}
-          role="button"
+          type="button"
         >
           <svg
             height="28"
@@ -111,7 +113,7 @@ describe('Card', () => {
               />
             </g>
           </svg>
-        </div>
+        </button>
         <div
           className="raf-card__image"
         >

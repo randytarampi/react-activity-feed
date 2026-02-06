@@ -3,9 +3,8 @@ import { render } from '@testing-library/react';
 
 import { Activity, ActivityProps } from './Activity';
 
-const testData: ActivityProps = {
+const testData: ActivityProps<any> = {
   activity: {
-    // @ts-expect-error
     actor: {
       data: {
         name: 'Nora Ferguson',

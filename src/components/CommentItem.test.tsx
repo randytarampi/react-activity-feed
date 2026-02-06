@@ -22,7 +22,7 @@ const testUserData = {
   id: '',
 };
 
-const testData: CommentItemProps['comment'] = {
+const testData: CommentItemProps<any>['comment'] = {
   user: undefined,
   created_at: '2021-04-13T07:40:37.975Z',
   data: {

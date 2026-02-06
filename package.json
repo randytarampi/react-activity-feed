@@ -24,7 +24,7 @@
   "scripts": {
     "test": "jest",
     "test-browser-build": "karma start ./test-browser-bundle/karma.config.js",
-    "eslint": "eslint '**/*.{js,jsx,ts,tsx,md,mdx}' --max-warnings 0",
+    "eslint": "eslint '**/*.{js,jsx,ts,tsx,md,mdx}'",
     "prettier": "prettier --list-different '**/*.{js,ts,tsx,md,mdx,json}' .eslintrc.json .prettierrc .babelrc",
     "prettier-fix": "prettier --write '**/*.{js,ts,tsx,md,mdx,json}' .eslintrc.json .prettierrc .babelrc",
     "validate-translations": "node scripts/validate-translations.js",

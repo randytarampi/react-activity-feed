@@ -41,7 +41,7 @@ export const ReactionList = <T extends TransportType>({
   const activityPath = defaultActivityPath || feed.getActivityPath(activityId);
   const orderPrefix = oldestToNewest ? 'oldest' : 'latest';
   const reactionsExtra = feed.activities.getIn([...activityPath, orderPrefix + '_reactions_extra']);
-  const hasNextPage = reactionsExtra ? !!reactionsExtra.getIn([reactionKind, 'next'], '') : true;
+  const hasNextPage = reactionsExtra ? !!(reactionsExtra as any).getIn([reactionKind, 'next'], '') : true;
   let reactions = feed.activities.getIn(
     [...activityPath, orderPrefix + '_reactions', reactionKind],
     immutable.List(),
@@ -68,11 +68,11 @@ export const ReactionList = <T extends TransportType>({
       {smartRender<LoadMorePaginatorProps>(Paginator, {
         loadNextPage,
         hasNextPage,
-        refreshing,
+        refreshing: refreshing as boolean,
         reverse: reverseOrder,
         children: reactions.map((reaction) =>
           smartRender(Reaction, {
-            reaction: reaction.toJS(),
+            reaction: reaction.toJS() as EnrichedReaction<T>,
             key: reaction.get('id'),
           }),
         ),

@@ -5,8 +5,7 @@ import { render, fireEvent } from '@testing-library/react';
 import { RepostButton, RepostButtonProps } from './RepostButton';
 import { FeedProvider } from '../context/Feed';
 
-const testActivity: RepostButtonProps['activity'] = {
-  // @ts-expect-error
+const testActivity: RepostButtonProps<any>['activity'] = {
   actor: {
     data: {
       name: 'Nora Ferguson',

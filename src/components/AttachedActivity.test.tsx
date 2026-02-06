@@ -18,7 +18,7 @@ const activity = {
   object: 'Random string',
 };
 
-type Activity = AttachedActivityProps['activity'];
+type Activity = AttachedActivityProps<any>['activity'];
 
 describe('AttachedActivity', () => {
   it('renders without attachments and with actor', () => {
